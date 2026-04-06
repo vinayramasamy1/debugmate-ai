@@ -317,6 +317,7 @@ function CodeViewer({
   copyAction,
   copyLabel,
   toolbarLabel,
+  minHeightClass,
 }: {
   title: string;
   code: string;
@@ -326,6 +327,7 @@ function CodeViewer({
   copyAction?: () => void;
   copyLabel?: string;
   toolbarLabel?: string;
+  minHeightClass?: string;
 }) {
   const lines = splitCodeLines(code);
   const highlightSet = new Set(highlightedLines);
@@ -348,7 +350,11 @@ function CodeViewer({
         ) : null}
       </div>
       <div className="w-full overflow-x-auto">
-        <div className="max-h-[32rem] min-w-full overflow-y-auto font-mono text-sm leading-7 text-slate-200">
+        <div
+          className={`min-w-full overflow-y-auto font-mono text-[15px] leading-8 text-slate-200 ${
+            minHeightClass || "min-h-[28rem] max-h-[32rem]"
+          }`}
+        >
           {lines.map((line, index) => {
             const lineNumber = index + 1;
             const isHighlighted = highlightSet.has(lineNumber);
@@ -374,7 +380,7 @@ function CodeViewer({
                 >
                   {lineNumber}
                 </div>
-                <div className="whitespace-pre px-4 py-1">
+                <div className="whitespace-pre px-5 py-1.5">
                   {line.length > 0 ? tokenizeLine(line, language) : "\u00A0"}
                 </div>
               </div>
@@ -404,7 +410,7 @@ function DiffViewer({
         <p className="mt-1 text-xs text-slate-400">{language}</p>
       </div>
       <div className="w-full overflow-x-auto">
-        <div className="max-h-[24rem] min-w-full overflow-y-auto font-mono text-sm leading-7 text-slate-200">
+        <div className="min-h-[26rem] max-h-[34rem] min-w-full overflow-y-auto font-mono text-[15px] leading-8 text-slate-200">
         {rows.map((row, index) => (
           <div
             key={`${title}-${index}`}
@@ -415,7 +421,7 @@ function DiffViewer({
             <div className="select-none border-r border-white/5 px-3 py-1 text-right text-xs text-slate-500">
               {row.lineNumber ?? ""}
             </div>
-            <div className="whitespace-pre px-4 py-1">
+            <div className="whitespace-pre px-5 py-1.5">
               {row.content.length > 0 ? tokenizeLine(row.content, language) : "\u00A0"}
             </div>
           </div>
@@ -426,9 +432,9 @@ function DiffViewer({
   );
 
   return (
-    <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-6 shadow-lg shadow-black/20 sm:p-7">
-      <div className="mb-6">
-        <p className="text-base font-semibold text-white">Minimal-fix diff view</p>
+    <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-6 shadow-lg shadow-black/20 sm:p-8">
+      <div className="mb-7">
+        <p className="text-lg font-semibold text-white">Minimal Diff</p>
         <p className="mt-1 text-sm text-slate-400">
           Compare original and corrected code without losing context
         </p>
@@ -992,7 +998,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-10">
                 <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-6 shadow-lg shadow-black/20 sm:p-7">
                   <div className="mb-5 inline-flex rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
                     Minimal Diff Summary
@@ -1011,37 +1017,40 @@ export default function Home() {
                         </span>
                       ))}
                     </div>
-                  ) : null}
+                    ) : null}
                 </section>
 
-                <div className="grid gap-5 xl:grid-cols-2">
-                  <CodeViewer
-                    title="Original Code Preview"
-                    code={originalPreviewCode}
+                <CodeViewer
+                  title="Original Code"
+                  code={originalPreviewCode}
+                  language={submittedLanguage}
+                  highlightedLines={relevantHighlights}
+                  lineRefs={highlightedLineRefs}
+                  toolbarLabel={
+                    hasAnalyzed
+                      ? "Highlighted lines reflect the likely failure area"
+                      : submittedLanguage
+                  }
+                  minHeightClass="min-h-[28rem] max-h-[32rem]"
+                />
+
+                <CodeViewer
+                  title="Fixed Code"
+                  code={analysis.correctedCode}
+                  language={submittedLanguage}
+                  copyAction={handleCopyCode}
+                  copyLabel={copiedCode ? "Copied" : "Copy Code"}
+                  toolbarLabel="Ready to copy"
+                  minHeightClass="min-h-[28rem] max-h-[32rem]"
+                />
+
+                <div className="rounded-[2rem] border border-cyan-400/10 bg-gradient-to-b from-cyan-400/5 to-transparent p-1">
+                  <DiffViewer
+                    originalCode={originalPreviewCode}
+                    fixedCode={analysis.correctedCode}
                     language={submittedLanguage}
-                    highlightedLines={relevantHighlights}
-                    lineRefs={highlightedLineRefs}
-                    toolbarLabel={
-                      hasAnalyzed
-                        ? "Highlighted lines reflect the likely failure area"
-                        : submittedLanguage
-                    }
-                  />
-                  <CodeViewer
-                    title="Corrected Code"
-                    code={analysis.correctedCode}
-                    language={submittedLanguage}
-                    copyAction={handleCopyCode}
-                    copyLabel={copiedCode ? "Copied" : "Copy Code"}
-                    toolbarLabel="Ready to copy"
                   />
                 </div>
-
-                <DiffViewer
-                  originalCode={originalPreviewCode}
-                  fixedCode={analysis.correctedCode}
-                  language={submittedLanguage}
-                />
 
                 {submittedLanguage === "JavaScript" && hasAnalyzed ? (
                   <section className="rounded-[1.75rem] border border-white/10 bg-slate-950/70 p-6 shadow-lg shadow-black/20 sm:p-7">
